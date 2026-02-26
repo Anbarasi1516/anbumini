@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { LogIn, UserPlus } from 'lucide-react';
+import { Brain, Mail, Lock, Loader } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { signIn, signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -15,86 +15,71 @@ export default function Auth() {
     setError('');
     setLoading(true);
 
-    const { error } = isLogin
-      ? await signIn(email, password)
-      : await signUp(email, password);
+    try {
+      const { error: authError } = isSignUp
+        ? await signUp(email, password)
+        : await signIn(email, password);
 
-    if (error) {
-      setError(error.message);
+      if (authError) {
+        setError(authError.message || 'Authentication failed');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <div className="flex justify-center mb-8">
+            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 p-4 rounded-2xl">
+              <Brain className="w-10 h-10 text-white" />
+            </div>
+          </div>
+
+          <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">
             INTELLIGENT LEARNING
           </h1>
-          <h2 className="text-2xl font-semibold text-blue-600 mb-1">
-            TIME OPTIMIZATION
-          </h2>
-          <p className="text-gray-600">Using AI</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
-                isLogin
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <LogIn className="inline w-4 h-4 mr-2" />
-              Login
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
-                !isLogin
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <UserPlus className="inline w-4 h-4 mr-2" />
-              Sign Up
-            </button>
-          </div>
+          <p className="text-gray-500 text-center mb-8 text-sm">
+            AI-Powered Study Optimization
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="your@email.com"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  required
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="••••••••"
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  required
+                />
+              </div>
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {error}
               </div>
             )}
@@ -102,11 +87,34 @@ export default function Auth() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold py-2.5 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {loading ? 'Processing...' : isLogin ? 'Login' : 'Create Account'}
+              {loading && <Loader className="w-4 h-4 animate-spin" />}
+              {isSignUp ? 'Create Account' : 'Sign In'}
             </button>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-gray-600 text-sm">
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="ml-2 text-blue-600 font-semibold hover:text-blue-700 transition"
+              >
+                {isSignUp ? 'Sign In' : 'Sign Up'}
+              </button>
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 bg-white/10 backdrop-blur rounded-lg p-6 text-white">
+          <h3 className="font-semibold mb-3">Key Features</h3>
+          <ul className="space-y-2 text-sm opacity-90">
+            <li>✓ AI-Powered Scheduling</li>
+            <li>✓ Progress Tracking</li>
+            <li>✓ Adaptive Study Plans</li>
+            <li>✓ Smart Task Management</li>
+          </ul>
         </div>
       </div>
     </div>

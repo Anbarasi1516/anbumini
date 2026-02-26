@@ -36,41 +36,32 @@ export default function SubjectManager() {
   const loadSubjects = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('subjects')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      setSubjects(data);
-    }
+    if (data) setSubjects(data);
     setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !formData.name) return;
 
     if (editingId) {
-      const { error } = await supabase
+      await supabase
         .from('subjects')
         .update({ ...formData, updated_at: new Date().toISOString() })
         .eq('id', editingId);
-
-      if (!error) {
-        loadSubjects();
-        resetForm();
-      }
     } else {
-      const { error } = await supabase
+      await supabase
         .from('subjects')
         .insert([{ ...formData, user_id: user.id }]);
-
-      if (!error) {
-        loadSubjects();
-        resetForm();
-      }
     }
+
+    loadSubjects();
+    resetForm();
   };
 
   const handleEdit = (subject: Subject) => {
@@ -85,16 +76,9 @@ export default function SubjectManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this subject? This will also delete all related tasks.')) return;
-
-    const { error } = await supabase
-      .from('subjects')
-      .delete()
-      .eq('id', id);
-
-    if (!error) {
-      loadSubjects();
-    }
+    if (!confirm('Delete this subject?')) return;
+    await supabase.from('subjects').delete().eq('id', id);
+    loadSubjects();
   };
 
   const resetForm = () => {
@@ -109,49 +93,39 @@ export default function SubjectManager() {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading subjects...</div>;
+    return <div className="text-center py-12 text-gray-500">Loading subjects...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <BookOpen className="w-8 h-8 text-green-600" />
-          Subjects
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-900">My Subjects</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+          className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
         >
           <Plus className="w-5 h-5" />
-          Add Subject
+          Add
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
           <h3 className="text-lg font-semibold mb-4">
             {editingId ? 'Edit Subject' : 'New Subject'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subject Name
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="e.g., Mathematics, Physics"
-                required
-              />
-            </div>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Subject name"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+              required
+            />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Color
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
               <div className="flex gap-2 flex-wrap">
                 {colorOptions.map((color) => (
                   <button
@@ -159,9 +133,7 @@ export default function SubjectManager() {
                     type="button"
                     onClick={() => setFormData({ ...formData, color })}
                     className={`w-10 h-10 rounded-lg transition-all ${
-                      formData.color === color
-                        ? 'ring-4 ring-gray-300 scale-110'
-                        : 'hover:scale-105'
+                      formData.color === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
                     }`}
                     style={{ backgroundColor: color }}
                   />
@@ -171,9 +143,7 @@ export default function SubjectManager() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Difficulty Level (1-5)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
                 <input
                   type="number"
                   min="1"
@@ -182,14 +152,12 @@ export default function SubjectManager() {
                   onChange={(e) =>
                     setFormData({ ...formData, difficulty_level: parseInt(e.target.value) })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Target Hours/Week
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Hours/Week</label>
                 <input
                   type="number"
                   min="0"
@@ -198,22 +166,22 @@ export default function SubjectManager() {
                   onChange={(e) =>
                     setFormData({ ...formData, target_hours_per_week: parseFloat(e.target.value) })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 />
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2">
               <button
                 type="submit"
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg hover:shadow transition-all"
               >
                 {editingId ? 'Update' : 'Create'}
               </button>
               <button
                 type="button"
                 onClick={resetForm}
-                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300"
               >
                 Cancel
               </button>
@@ -222,49 +190,38 @@ export default function SubjectManager() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {subjects.length === 0 ? (
           <div className="col-span-full text-center py-12 text-gray-500">
-            No subjects yet. Add your first subject to get started!
+            Add your first subject to get started
           </div>
         ) : (
           subjects.map((subject) => (
             <div
               key={subject.id}
-              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-5 border-l-4"
+              style={{ borderLeftColor: subject.color }}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: subject.color }}
-                  >
-                    <BookOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{subject.name}</h3>
-                    <p className="text-sm text-gray-500">Level {subject.difficulty_level}</p>
-                  </div>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-900">{subject.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Level {subject.difficulty_level} • {subject.target_hours_per_week}h/week
+                  </p>
                 </div>
                 <div className="flex gap-1">
                   <button
                     onClick={() => handleEdit(subject)}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(subject.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Target Hours/Week:</span>
-                  <span className="font-medium">{subject.target_hours_per_week}h</span>
                 </div>
               </div>
             </div>

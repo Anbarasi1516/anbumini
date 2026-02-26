@@ -45,6 +45,7 @@ export default function TimetableView() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     loadData();
@@ -173,56 +174,38 @@ export default function TimetableView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Calendar className="w-8 h-8 text-blue-600" />
-          AI-Optimized Timetable
-        </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-gray-900">Study Schedule</h2>
         <button
           onClick={generateTimetable}
           disabled={generating}
-          className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
         >
           {generating ? (
             <>
-              <RefreshCw className="w-5 h-5 animate-spin" />
+              <RefreshCw className="w-4 h-4 animate-spin" />
               Generating...
             </>
           ) : (
             <>
-              <Sparkles className="w-5 h-5" />
-              Generate Smart Schedule
+              <Sparkles className="w-4 h-4" />
+              Generate
             </>
           )}
         </button>
       </div>
 
       {subjects.length === 0 || tasks.length === 0 ? (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-          <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Getting Started</h3>
-          <p className="text-gray-600">
-            Add subjects and tasks first, then click "Generate Smart Schedule" to create your
-            AI-optimized timetable based on priorities, deadlines, and your preferences.
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+          <AlertCircle className="w-10 h-10 text-blue-600 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">No Schedule Yet</h3>
+          <p className="text-sm text-gray-600">
+            Add subjects and tasks to generate your AI schedule
           </p>
         </div>
       ) : (
         <>
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
-            <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-blue-600" />
-              AI-Powered Features
-            </h3>
-            <ul className="space-y-1 text-sm text-gray-700">
-              <li>✓ Priority-based scheduling considers task urgency and deadlines</li>
-              <li>✓ Difficulty-aware allocation balances challenging and easier tasks</li>
-              <li>✓ Subject target hours ensure balanced learning across all subjects</li>
-              <li>✓ Adaptive breaks optimize focus and prevent burnout</li>
-              <li>✓ Smart time slots match your study preferences</li>
-            </ul>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-6">
               <button
                 onClick={() => changeDate(-1)}
